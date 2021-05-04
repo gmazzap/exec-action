@@ -8,15 +8,22 @@ const ACTION_UA = `${pkg.name}/${pkg.version}`;
 
 // Sets the required env info for Percy to work correctly
 function setPercyBranchBuildInfo(pullRequestNumber, isDebug) {
+  const override = process.env.PERCY_BRANCH_OVERRIDE || null;
+  if (override) {
+      core.exportVariable('PERCY_BRANCH', PERCY_BRANCH_OVERRIDE);
+  }
   if (!!pullRequestNumber) {
     let prBranch = github.context.payload.pull_request.head.ref;
-
-    core.exportVariable('PERCY_BRANCH', prBranch);
+    if (!override) {
+        core.exportVariable('PERCY_BRANCH', prBranch);
+    }
     core.exportVariable('PERCY_PULL_REQUEST', pullRequestNumber);
-  } else if (github.context.payload.ref) {
-    core.exportVariable('PERCY_BRANCH', github.context.payload.ref.replace('refs/heads/', ''));
-  } else if (isDebug) {
-    console.log('Could not set `PERCY_BRANCH`');
+  } else if (!override) {
+    if (github.context.payload.ref) {
+        core.exportVariable('PERCY_BRANCH', github.context.payload.ref.replace('refs/heads/', ''));
+    } else if (isDebug) {
+        console.log('Could not set `PERCY_BRANCH`');
+    }
   }
 }
 
